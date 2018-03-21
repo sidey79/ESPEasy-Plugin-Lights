@@ -293,6 +293,9 @@ boolean Plugin_123(byte function, struct EventStruct *event, String& string)
         
         addLog(LOG_LEVEL_INFO, log);
         
+       
+        analogWriteFreq(5150);
+       
         Plugin_123_init = true;
         success = true;
 //        if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]) Plugin_123_triggerSendDataAfterBoot = true;
