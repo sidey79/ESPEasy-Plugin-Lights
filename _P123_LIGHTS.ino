@@ -34,6 +34,7 @@ boolean Plugin_123_tempOff                  = false;
 Ticker  Plugin_123_Ticker;
 int     Plugin_123_FadingRate        = 50; //Hz
 float   Plugin_123_defaultFadingTime = 0;
+int     Plugin_123_PWMFreq           = 500; //Hz
 
 struct Plugin_123_structLightParam {
   String  rgbStr    = "7f7f7f";
@@ -184,6 +185,12 @@ boolean Plugin_123(byte function, struct EventStruct *event, String& string)
         string += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
         string += F("'> (-1 =&gt; disable fading timer)");
 
+        //string += F("<TR><TD>PWM Frequency (Hz):<TD><input type='text' name='plugin_123_PWMFreq' value='");
+        //string += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
+        //string += F("'");
+        sprintf_P(tmpString, PSTR("<TR><TD>PWM Frequency (Hz):<TD><input type='text' name='plugin_123_PWMFreq' value='%u'>"), Settings.TaskDevicePluginConfigLong[event->TaskIndex][2]);
+        string += tmpString;
+
         string += F("<TR><TD>Send Boot State:<TD>");
          if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][1])
            string += F("<input type=checkbox name=plugin_123_sendBootState checked>");
@@ -214,6 +221,9 @@ boolean Plugin_123(byte function, struct EventStruct *event, String& string)
         Settings.TaskDevicePluginConfig[event->TaskIndex][7] = plugin13.toInt();
         String plugin15 = WebServer.arg("plugin_123_fadingTime");
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = plugin15.toFloat();
+        String plugin16 = WebServer.arg("plugin_123_PWMFreq");
+        //Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = plugin16.toFloat();
+        Settings.TaskDevicePluginConfigLong[event->TaskIndex][2] = plugin16.toInt();
 
         String plugin8 = WebServer.arg("plugin_123_enableRGB");
         Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = (plugin8 == "on");
@@ -246,6 +256,7 @@ boolean Plugin_123(byte function, struct EventStruct *event, String& string)
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][6] > 0)
           Plugin_123_options.cwTemp = Settings.TaskDevicePluginConfig[event->TaskIndex][6];
         Plugin_123_defaultFadingTime = Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0];
+        Plugin_123_PWMFreq = Settings.TaskDevicePluginConfigLong[event->TaskIndex][2];
 
         String log = F("INIT : Lights [");
 
@@ -293,6 +304,8 @@ boolean Plugin_123(byte function, struct EventStruct *event, String& string)
         
         addLog(LOG_LEVEL_INFO, log);
         
+        analogWriteFreq(Plugin_123_PWMFreq);
+       
         Plugin_123_init = true;
         success = true;
 //        if (Settings.TaskDevicePluginConfigLong[event->TaskIndex][1]) Plugin_123_triggerSendDataAfterBoot = true;
@@ -466,7 +479,7 @@ void Plugin_123_setLightParams(String cmd)
   if (cmd == F("rgb"))
   {
     Plugin_123_lightParam.colorMode = 1;
-    int _white_;
+    int _white_ =0;
 
     // http://stackoverflow.com/questions/23576827/arduino-convert-a-sting-hex-ffffff-into-3-int
     int32_t rgbDec = Plugin_123_rgbStr2Num(Plugin_123_lightParam.rgbStr);
@@ -858,6 +871,7 @@ void Plugin_123_dumpValues()
   Serial.print(F("Lights: ww: "));            Serial.print(Plugin_123_pins[3].CurrentLevel); Serial.print(F(" -> ")); Serial.println(Plugin_123_pins[3].FadingTargetLevel);
   Serial.print(F("Lights: cw: "));            Serial.print(Plugin_123_pins[4].CurrentLevel); Serial.print(F(" -> ")); Serial.println(Plugin_123_pins[4].FadingTargetLevel);
   Serial.print(F("Lights: state: "));         Serial.print(Plugin_123_lightParam.state);
+  Serial.print(F("Lights: PWMFreq: "));       Serial.print(Plugin_123_PWMFreq);
   Serial.println(F(""));
   
 }
